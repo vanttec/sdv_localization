@@ -1,0 +1,6 @@
+[submodule "rviz_satellite"]
+	path = rviz_satellite
+	url = https://github.com/EdisonAltamirano/rviz_satellite.git
+[submodule "vectornav"]
+	path = vectornav
+	url = https://github.com/EdisonAltamirano/vectornav.git
