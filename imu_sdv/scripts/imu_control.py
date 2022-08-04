@@ -37,9 +37,9 @@ class ImuControl:
         self.current_node=None
         self.origin_x=-100.289790
         self.origin_y=25.651249
-        self.offsetx=74824.56666
+        self.offsetx=64824.56666
         self.offsety=350000
-        self.offset_angle=-(180)*(math.pi/180)
+        self.offset_angle=(180-20)*(math.pi/180)
         #360+20
     def imu_callback(self,data):
         self.vx=data.twist.twist.linear.x
