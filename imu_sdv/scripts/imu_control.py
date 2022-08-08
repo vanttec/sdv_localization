@@ -12,7 +12,7 @@ from sensor_msgs.msg import NavSatFix
 class ImuControl:
     def __init__(self) -> None:
         self.odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
-        self.path_pub = rospy.Publisher("/sdv/path1", Path, queue_size=50)
+        self.path_pub = rospy.Publisher("/sdv/path", Path, queue_size=50)
         self.imu_sub = rospy.Subscriber("/vectornav/Odom", Odometry, self.imu_callback)
         self.imu_sub = rospy.Subscriber("/vectornav/GPS", NavSatFix, self.gps_callback)
         self.odom_broadcaster = tf.TransformBroadcaster()
@@ -55,7 +55,7 @@ class ImuControl:
         if self.imu_longitude!=0 and self.imu_latitude!=0 and self.enable_imu==False:
             new_x=(self.imu_longitude-self.origin_x )*self.offsetx
             new_y=(self.imu_latitude-self.origin_y)*self.offsety
-            current_coord=str(new_x)+" "+str(new_y)+" "+"0 "+str(self.offset_angle)+" 0 0 map odom2"
+            current_coord=str(new_x)+" "+str(new_y)+" "+"0 "+str(self.offset_angle)+" 0 0 map odom"
             rospy.loginfo("New coord")
             rospy.loginfo(self.imu_longitude-self.origin_x )
             rospy.loginfo(self.imu_latitude-self.origin_y)
@@ -87,20 +87,20 @@ class ImuControl:
                 (self.x, -self.y, 0.),
                 odom_quat,
                 self.current_time,
-                "base_link2",
-                "odom2"
+                "base_link",
+                "odom"
             )
 
             # next, we'll publish the odometry message over ROS
             odom = Odometry()
             odom.header.stamp = self.current_time
-            odom.header.frame_id = "odom2"
+            odom.header.frame_id = "odom"
 
             # set the position
             odom.pose.pose = Pose(Point(self.x, -self.y, 0.), Quaternion(*odom_quat))
 
             # set the velocity
-            odom.child_frame_id = "base_link2"
+            odom.child_frame_id = "base_link"
             odom.twist.twist = Twist(Vector3(self.vx, self.vy, 0), Vector3(0, 0, self.vth))
 
             # publish the message
@@ -108,7 +108,7 @@ class ImuControl:
             self.last_time = self.current_time
             #Draw path
             if self.x != self.past_x or -self.y != self.past_y or self.th != self.past_th:
-                self.sdv_path.header.frame_id = "odom2"
+                self.sdv_path.header.frame_id = "odom"
                 self.sdv_path.header.stamp = rospy.Time.now()
                 pose = PoseStamped()
                 pose.pose.position.x = self.x
