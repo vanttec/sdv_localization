@@ -7,9 +7,9 @@
 
   <link name="base_link2">
     <visual>
-    	<origin rpy="1.57 0 1.57" xyz="-0.25 -0.425 -0.165"/>
+    	<origin rpy="1.57 0 -1.57" xyz="-0.25 -0.425 -0.165"/>
       <geometry>
-        <mesh filename="package://imu_sdv/models/meshes/VTEC_U-II_GAMMA.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://imu_sdv/models/meshes/sdv.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="white"/>
     </visual>
