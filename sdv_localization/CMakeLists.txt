@@ -30,20 +30,22 @@ find_package(tf2_geometry_msgs REQUIRED)
 add_subdirectory(vnproglib-1.2.0.0/cpp)
 
 #vn_odom_ned_msgs
-add_executable(vn_odom_ned_msgs src/odom_pub.cc)
-ament_target_dependencies(vn_odom_ned_msgs rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
-target_link_libraries(vn_odom_ned_msgs vncxx )
+
+add_executable(vn_ned_pose src/ned_pose.cc)
+ament_target_dependencies(vn_ned_pose rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
+
+target_link_libraries(vn_ned_pose vncxx )
 
 
 install(TARGETS
-  vn_odom_ned_msgs
+  vn_ned_pose
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# install(DIRECTORY
-#   config launch
-#   DESTINATION share/${PROJECT_NAME}/
-# )
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

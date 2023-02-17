@@ -20,6 +20,7 @@
 #include "vectornav_msgs/msg/ins_group.hpp"
 #include "vectornav_msgs/msg/time_group.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "nav_msgs/msg/path.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 
 
@@ -43,9 +44,10 @@ public:
     
     vn_velodyne_tf_broafcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     odom_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-    pub_local_pose =  this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("vectornav/local_pose", 10);
+    pub_ned_pose =  this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("vectornav/ned_pose", 10);
     pub_ref_ecef = this->create_publisher<geometry_msgs::msg::Point>("vectornav/ref_ecef", 10);
     pub_ref_ins = this->create_publisher<geometry_msgs::msg::Point>("vectornav/ref_ins", 10);
+    pub_ned_path =  this->create_publisher<nav_msgs::msg::Path>("vectornav/ned_path", 10);
     
     // Subscribers
     
@@ -79,10 +81,6 @@ public:
       "vectornav/raw/gps2", 10, sub_vn_gps2_cb);
   }
 
-  sensor_msgs::msg::NavSatFix ref_ins;
-  geometry_msgs::msg::PoseWithCovarianceStamped ref_ecef;
-  geometry_msgs::msg::PoseWithCovarianceStamped local_pose;
-  bool hasRef;
 
 
 private:
@@ -91,210 +89,100 @@ private:
    */
   void sub_vn_common(const vectornav_msgs::msg::CommonGroup::SharedPtr msg_in)
   {
-    // RCLCPP_INFO(get_logger(), "Frame ID: '%s'", msg_in->header.frame_id.c_str());
+    RCLCPP_INFO(get_logger(), "Frame ID: '%s'", msg_in->header.frame_id.c_str());
 
     // Time Reference (Startup)
 
-    //Local Pose publish
-    {
-      geometry_msgs::msg::PoseWithCovarianceStamped msg;
-      //First verify if no reference is obtained
 
-      if(!hasRef){
-        bool diffFromCero;
+    //NED_POSE_Publish
+    geometry_msgs::msg::PoseWithCovarianceStamped ned_pose_msg;
+    if(hasRef){
         
-        //Verifies is given ECEF Coordinates are different from cero
-        diffFromCero = (ins_posecef_.x != 0 && ins_posecef_.y != 0 && ins_posecef_.z != 0);
+        float latInRads = deg2rad(ref_ins_poslla_.x); 
+        float lonInRads = deg2rad(ref_ins_poslla_.y);
 
-        if(!(gps_fix_ == vectornav_msgs::msg::GpsGroup::GPSFIX_NOFIX) && diffFromCero){ //A fix is ready
-
-          RCLCPP_INFO_ONCE(this->get_logger(), "Fix is ready!");
-
-          geometry_msgs::msg::PoseWithCovarianceStamped newRef;
-          newRef.header = msg_in-> header;
-          newRef.header.frame_id = "";
-          newRef.pose.pose.position = ins_posecef_;
-
-          // Converts Quaternion in NED to ECEF
-          tf2::Quaternion q, q_enu2ecef, q_ned2enu;
-          q_ned2enu.setRPY(M_PI, 0.0, M_PI / 2);
-
-          auto latitude = deg2rad(msg_in->position.x);
-          auto longitude = deg2rad(msg_in->position.y);
-          q_enu2ecef.setRPY(0.0, latitude, longitude);
-
-          fromMsg(msg_in->quaternion, q);
-
-          newRef.pose.pose.orientation = toMsg(q_ned2enu * q_enu2ecef * q);
-
-          ref_ecef = newRef; //Check whaths happening
-
-          sensor_msgs::msg::NavSatFix newRef2;
-          newRef2.latitude = msg_in->position.x;
-          newRef2.longitude = msg_in->position.y;
-          newRef2.altitude = msg_in->position.z;
-          
-          ref_ins = newRef2;
-          hasRef = true;
-          RCLCPP_INFO_ONCE(this->get_logger(), "Reference is done ready!");
-          RCLCPP_INFO_ONCE(this->get_logger(), "ECEF ref: %d, %d, %d", newRef.pose.pose.position.x, newRef.pose.pose.position.y, newRef.pose.pose.position.z);
-          
-        }
-      }
-      //Dosnt do anything if not ready
-      if (hasRef){ //If reference is done, calculate local
-      tf2::Vector3 NED;
-
-
-      tf2::Matrix3x3 Rne;
-        Rne.setValue(-sin(ref_ins.latitude) * cos(ref_ins.longitude), -sin(ref_ins.latitude) * sin(ref_ins.longitude), cos(ref_ins.latitude),
-		   -sin(ref_ins.longitude), cos(ref_ins.longitude), 0,
-		   -cos(ref_ins.latitude) * cos(ref_ins.longitude), -cos(ref_ins.latitude) * sin(ref_ins.longitude), -sin(ref_ins.latitude));
+        tf2::Matrix3x3 RotMatEcef2Ned;
         
-      tf2::Vector3 Pe;
-      tf2::Vector3 Pe_ref;
-      //tf2::Vector3 ActualPe;
-
-      double newX, newY, newZ;
+        
+        RotMatEcef2Ned.setValue(-sin(latInRads) * cos(lonInRads), -sin(latInRads) * sin(lonInRads), cos(latInRads),
+		   -sin(lonInRads), cos(lonInRads), 0,
+		   -cos(latInRads) * cos(lonInRads), -cos(latInRads) * sin(lonInRads), -sin(latInRads));
             
-      Pe.setX(ins_posecef_.x);
-      Pe.setY(ins_posecef_.y);
-      Pe.setZ(ins_posecef_.z);
+        tf2::Vector3 VectorRefEcef, VectorPoseEcef;
 
-      Pe_ref.setX(ref_ecef.pose.pose.position.x);
-      Pe_ref.setY(ref_ecef.pose.pose.position.y);
-      Pe_ref.setZ(ref_ecef.pose.pose.position.z);
+        VectorRefEcef.setX(ref_ins_posecef_.x);
+        VectorRefEcef.setY(ref_ins_posecef_.y);
+        VectorRefEcef.setZ(ref_ins_posecef_.z);
+
+        VectorPoseEcef.setX(ins_posecef_.x);
+        VectorPoseEcef.setY(ins_posecef_.y);
+        VectorPoseEcef.setZ(ins_posecef_.z);
+
+        //We changed to TF2 standard messages for easier matrix rotation and subtraction
+
+        tf2::Vector3 VectorPoseInNED;
+
+        VectorPoseInNED = RotMatEcef2Ned * (VectorPoseEcef - VectorRefEcef);
+
+        ned_pose_msg.pose.pose.position.x = VectorPoseInNED.getX();
+        ned_pose_msg.pose.pose.position.y = VectorPoseInNED.getY();
+        ned_pose_msg.pose.pose.position.z = 0;
+        ned_pose_msg.pose.pose.orientation = msg_in->quaternion;
+
+        ned_pose_msg.header.frame_id = "map";
+        ned_pose_msg.header.set__stamp(msg_in->header.stamp);
+
+        pub_ned_pose->publish(ned_pose_msg);
+
+        geometry_msgs::msg::PoseStamped pathToAdd;
+
+        pathToAdd.pose = ned_pose_msg.pose.pose;
+        pathToAdd.header = ned_pose_msg.header;
+
+        NED_path.header = ned_pose_msg.header;
+
+        NED_path.poses.push_back(pathToAdd);
+
+        pub_ned_path->publish(NED_path);
+
+        //Odometry publish
+        nav_msgs::msg::Odometry odom_msg;
+
+        odom_msg.child_frame_id = "odom";
+        odom_msg.header = ned_pose_msg.header;
+        odom_msg.pose = ned_pose_msg.pose;
+        odom_msg.twist.twist.angular = msg_in->angularrate;
+        odom_msg.twist.twist.linear = msg_in->velocity;
+        
+        pub_odom_->publish(odom_msg);
+
+        //Transform map -> odom publish
+        geometry_msgs::msg::TransformStamped map2odom_tf;
+
+        map2odom_tf.header.frame_id = "map";
+        map2odom_tf.header.stamp = odom_msg.header.stamp;
+        map2odom_tf.child_frame_id = "odom";
+        map2odom_tf.transform.translation.x = ned_pose_msg.pose.pose.position.x;
+        map2odom_tf.transform.translation.y = ned_pose_msg.pose.pose.position.y;
+        map2odom_tf.transform.translation.z = ned_pose_msg.pose.pose.position.z;
+        map2odom_tf.transform.set__rotation(msg_in->quaternion);
+
+        odom_tf_broadcaster_->sendTransform(map2odom_tf);
+
+        
+
+
+
+
+    }
+    else{
+        RCLCPP_INFO(get_logger(), "Reference can't be calculated, location data is 0");
+    }
+        
+     
+      
 
     
-      RCLCPP_INFO(this->get_logger(), "ECEF ref: %f, %f, %f", ref_ecef.pose.pose.position.x, ref_ecef.pose.pose.position.y, ref_ecef.pose.pose.position.z);
-      RCLCPP_INFO(this->get_logger(), "ECEF pos: %f, %f, %f", ins_posecef_.x, ins_posecef_.y, ins_posecef_.z);
-
-      newX = (ins_posecef_.x - ref_ecef.pose.pose.position.x);
-      newY = (ins_posecef_.y - ref_ecef.pose.pose.position.y);
-      newZ = (ins_posecef_.z - ref_ecef.pose.pose.position.z);
-
-      RCLCPP_INFO(this->get_logger(), "X calculations is: %f, -  %f, =  %f", ins_posecef_.x, ref_ecef.pose.pose.position.x, (ins_posecef_.x - ref_ecef.pose.pose.position.x));
-
-      
-      //RCLCPP_INFO(this->get_logger(), "ECEF curr pos: %f, %f, %f", ActualPe.getX(), ActualPe.getY(), ActualPe.getZ());
-      
-      RCLCPP_INFO(this->get_logger(), "ECEF curr pos: %f, %f, %f", newX, newY, newZ);
-
-
-      NED = Rne * (Pe - Pe_ref);
-
-       //NED = Rne * (msg_in->position - ref_ecef.pose.pose.position); //Const problem
-        double N = NED.getX();
-        double E = NED.getY();
-        double D = NED.getZ();
-
-         local_pose.pose.pose.position.x = N;
-         local_pose.pose.pose.position.y = E;
-         local_pose.pose.pose.position.z = D;
-
-
-        msg.pose.pose.position = local_pose.pose.pose.position;
-        RCLCPP_INFO(this->get_logger(), "Local pos: %f, %f, %f", N, E, D);
-
-        msg.header.frame_id = "local";
-        msg.header.stamp = msg_in->header.stamp;
-
-
-         pub_local_pose->publish(msg);
-
-        geometry_msgs::msg::Point temp_ref_ecef;
-        geometry_msgs::msg::Point temp_ref_ins;
-        temp_ref_ecef = ref_ecef.pose.pose.position;
-        temp_ref_ins.x = ref_ins.latitude;
-        temp_ref_ins.y = ref_ins.longitude;
-        temp_ref_ins.z = ref_ins.altitude;
-
-         pub_ref_ecef->publish(temp_ref_ecef);
-         pub_ref_ins->publish(temp_ref_ins);
-
-
-      }
-      //If gps fix is done, save reference ECEF, gnss and publish
-    }
-
-
-    // ODOM Publish
-    {
-      //ODOM CHECKLIST
-      
-
-      //Declaracion header, frame inicial
-      geometry_msgs::msg::TransformStamped msg_tf;
-      geometry_msgs::msg::TransformStamped vn_velodyne_msg_tf;
-      nav_msgs::msg::Odometry msg;
-      msg.header = msg_in -> header;
-      msg.header.frame_id = "local";  //Frame "Earth"
-
-      //Pose ECEF, pero queremos posicion NED Local
-      msg.pose.pose.position = local_pose.pose.pose.position;        //Cambiar a pose NED
-            // Converts Quaternion in NED to ECEF
-      tf2::Quaternion q, q_enu2ecef, q_ned2enu;
-      q_ned2enu.setRPY(M_PI, 0.0, M_PI / 2);
-
-      auto latitude = deg2rad(msg_in->position.x);
-      auto longitude = deg2rad(msg_in->position.y);
-      q_enu2ecef.setRPY(0.0, latitude, longitude);
-
-      fromMsg(msg_in->quaternion, q);
-
-      msg.pose.pose.orientation = toMsg(q_ned2enu * q_enu2ecef * q);
-      msg.header.stamp = msg_in->header.stamp;
-
-      //NED  msg.header = msg_in->header;
-      msg.twist.twist.linear = ins_velbody_;
-      msg.twist.twist.angular = msg_in->angularrate;
-      
-      geometry_msgs::msg::Vector3 NED;
-
-      msg.child_frame_id = "vehicle"; 
-      
-      //TODO Vehicle Transform checklist
-
-      pub_odom_->publish(msg);
-
-      msg_tf.header.stamp = msg_in->header.stamp;              
-      msg_tf.header.frame_id = "local";
-      msg_tf.child_frame_id = "vehicle";
-
-      vn_velodyne_msg_tf.header.stamp = msg_in->header.stamp;
-      vn_velodyne_msg_tf.header.frame_id = "local";
-      vn_velodyne_msg_tf.child_frame_id = "velodyne";
-      // vn_velodyne_msg_tf.transform.translation.x = 0.0;
-      // vn_velodyne_msg_tf.transform.translation.y = 0.0;
-      // vn_velodyne_msg_tf.transform.translation.z = 0.0;
-      // vn_velodyne_msg_tf.transform.rotation.x = 0.0;
-      // vn_velodyne_msg_tf.transform.rotation.y = 0.0;
-      // vn_velodyne_msg_tf.transform.rotation.z = 0.0;
-      // vn_velodyne_msg_tf.transform.rotation.w = 1.0;
-
-      vn_velodyne_msg_tf.transform.translation.x = local_pose.pose.pose.position.x;
-      vn_velodyne_msg_tf.transform.translation.y = local_pose.pose.pose.position.y;
-      vn_velodyne_msg_tf.transform.translation.z = 0.0;
-      vn_velodyne_msg_tf.transform.rotation.x = q.getX();
-      vn_velodyne_msg_tf.transform.rotation.y = q.getY();
-      vn_velodyne_msg_tf.transform.rotation.z = q.getZ();
-      vn_velodyne_msg_tf.transform.rotation.w = q.getW();
-
-      msg_tf.transform.translation.x = local_pose.pose.pose.position.x;
-      msg_tf.transform.translation.y = local_pose.pose.pose.position.y;
-      msg_tf.transform.translation.z = 0.0;
-      msg_tf.transform.rotation.x = q.getX();
-      msg_tf.transform.rotation.y = q.getY();
-      msg_tf.transform.rotation.z = q.getZ();
-      msg_tf.transform.rotation.w = q.getW();
-      odom_tf_broadcaster_-> sendTransform(msg_tf);
-      vn_velodyne_tf_broafcaster_->sendTransform(vn_velodyne_msg_tf);
-
-      
-
-      
-
-    }
 
     
   }
@@ -316,7 +204,8 @@ private:
   void sub_vn_gps(const vectornav_msgs::msg::GpsGroup::SharedPtr msg_in)
   {
     gps_fix_ = msg_in->fix;
-    gps_posu_ = msg_in->posu;
+
+
   }
 
   /** Convert VN attitude group data to ROS2 standard message types
@@ -332,6 +221,20 @@ private:
     RCLCPP_INFO(this->get_logger(), "posecef: %f, %f, %f", msg_in->posecef.x, msg_in->posecef.y, msg_in->posecef.z);
     ins_velbody_ = msg_in->velbody;
     ins_posecef_ = msg_in->posecef;
+    ins_poslla_ = msg_in->poslla;
+    ins_velned_ = msg_in->velned;
+    
+    //If the system still doesn't have a reference
+    if(!hasRef){
+    
+        //If the system has data different than zero
+        if(ins_posecef_.x!=0 && ins_posecef_.y!=0 && ins_poslla_.x!=0 & ins_poslla_.y!= 0){
+            ref_ins_posecef_ = ins_posecef_;
+            ref_ins_poslla_ = ins_poslla_;
+
+            hasRef = true;
+        }
+    }
   }
 
   /** Convert VN gps2 group data to ROS2 standard message types
@@ -388,9 +291,10 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> odom_tf_broadcaster_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> vn_velodyne_tf_broafcaster_;
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_local_pose;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr pub_ned_pose;
   rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr pub_ref_ins;
   rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr pub_ref_ecef;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_ned_path;
 
   /// Subscribers
   rclcpp::Subscription<vectornav_msgs::msg::CommonGroup>::SharedPtr sub_vn_common_;
@@ -419,14 +323,22 @@ private:
 
   /// TODO(Dereck): Find default covariance values
 
-  // State Vars
+  //Vars to store data from the INS Common groups
   uint8_t gps_fix_ = vectornav_msgs::msg::GpsGroup::GPSFIX_NOFIX;
-  geometry_msgs::msg::Vector3 gps_posu_;
   geometry_msgs::msg::Vector3 ins_velbody_;
   geometry_msgs::msg::Point ins_posecef_;
+  geometry_msgs::msg::Point ins_poslla_;
+  geometry_msgs::msg::Vector3 ins_velned_;
+
+  //Path message to publish
+  nav_msgs::msg::Path NED_path;
+
+  //Reference data
+  geometry_msgs::msg::Point ref_ins_posecef_;
+  geometry_msgs::msg::Point ref_ins_poslla_;
+  bool hasRef = false;
 };
 
-/// TODO(Dereck): convert to ros2 component
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
