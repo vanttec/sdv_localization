@@ -22,14 +22,14 @@ def generate_launch_description():
     start_transform_odom_base_link = Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            name="tf_odom_to_base_link",
-            arguments = ['0', '0', '-0.41', '0', '0', '0', 'odom', 'base_link'])
+            name="tf_map_to_odom",
+            arguments = ['0', '0', '0', '0', '0', '0', 'map', 'odom'])
     
     start_transform_base_link_velodyne = Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             name="tf_base_link_to_velodyne",
-            arguments = ['-0.2', '0.26', '-0.17', '-1.047191', '3.145926', '0', 'base_link', 'velodyne'])
+            arguments = ['-0.2', '0.26', '-0.58', '-1.047191', '3.145926', '0', 'base_link', 'velodyne'])
 
     # Create the launch description and populate
     ld = LaunchDescription()
