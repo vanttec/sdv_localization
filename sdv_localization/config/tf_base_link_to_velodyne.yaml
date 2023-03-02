@@ -1,0 +1,12 @@
+/tf_base_link_to_velodyne:
+  ros__parameters:
+    /child_frame_id: velodyne
+    /frame_id: base_link
+    /rotation/w: -0.0018763961177680622
+    /rotation/x: 0.4999959896349014
+    /rotation/y: 0.8660250088095515
+    /rotation/z: 0.001083329608622016
+    /translation/x: -0.2
+    /translation/y: 0.26
+    /translation/z: -0.17
+    use_sim_time: false

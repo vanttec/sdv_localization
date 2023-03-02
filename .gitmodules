@@ -1,7 +1,12 @@
-[submodule "rviz_satellite"]
-	path = rviz_satellite
-	url = https://github.com/EdisonAltamirano/rviz_satellite.git
 [submodule "vectornav"]
 	path = vectornav
-	url = https://github.com/EdisonAltamirano/vectornav.git
-	
+	url = https://github.com/dawonn/vectornav.git
+[submodule "pointcloud_to_laserscan"]
+	path = pointcloud_to_laserscan
+	url = https://github.com/ros-perception/pointcloud_to_laserscan.git
+[submodule "slam_toolbox"]
+	path = slam_toolbox
+	url = https://github.com/SteveMacenski/slam_toolbox.git
+[submodule "velodyne"]
+	path = velodyne
+	url = https://github.com/ros-drivers/velodyne.git
