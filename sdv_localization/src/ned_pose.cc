@@ -12,7 +12,7 @@
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "sensor_msgs/msg/temperature.hpp"
 #include "sensor_msgs/msg/time_reference.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "vectornav_msgs/msg/attitude_group.hpp"
 #include "vectornav_msgs/msg/common_group.hpp"
 #include "vectornav_msgs/msg/gps_group.hpp"
@@ -160,7 +160,7 @@ private:
         geometry_msgs::msg::TransformStamped map2odom_tf;
 
         map2odom_tf.header.frame_id = "odom";
-        map2odom_tf.header.stamp = odom_msg.header.stamp;
+        map2odom_tf.header.set__stamp(msg_in->header.stamp);
         map2odom_tf.child_frame_id = "base_link";
         map2odom_tf.transform.translation.x = ned_pose_msg.pose.pose.position.x;
         map2odom_tf.transform.translation.y = ned_pose_msg.pose.pose.position.y;
