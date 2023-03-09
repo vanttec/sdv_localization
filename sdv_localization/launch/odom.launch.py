@@ -16,7 +16,7 @@ def generate_launch_description():
     start_odom_pub = Node(
         package='sdv_localization', 
         executable='vn_ned_pose',
-        output='screen'
+        output='screen',
         parameters=[os.path.join(this_dir, 'config', 'VnNedPoseNode.yaml')])
     
 
