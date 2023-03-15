@@ -10,3 +10,6 @@
 [submodule "velodyne"]
 	path = velodyne
 	url = https://github.com/ros-drivers/velodyne.git
+[submodule "multisense_ros2"]
+	path = multisense_ros2
+	url = https://github.com/carnegierobotics/multisense_ros2.git
