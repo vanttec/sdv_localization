@@ -26,17 +26,19 @@ def generate_launch_description():
             arguments = ['0', '0', '0', '0', '0', '0', 'map', 'odom'])
     
     # In yaw, pitch,roll, it translates to -90, 180, -9 degrees to replicate the connection between the velodyne and the vn
+    # The velodyne sensor has a slight offset in yaw, so a 1.5 degree offset is applied
     start_transform_base_link_velodyne = Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             name="tf_base_link_to_velodyne",
-            arguments = ['.195', '0.0', '-0.14', '-1.57079', '3.145926', '-0.15708', 'base_link', 'velodyne'])
+            arguments = ['.195', '0.0', '-0.14', '-1.544616', '3.145926', '-0.15708', 'base_link', 'velodyne'])
     
     start_transform_base_link_base_footprint = Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             name="tf_base_link_to_base_footprint",
-            arguments = ['0', '0', '1.9', '0', '0', '0', 'base_link', 'base_footprint'])
+                                #Real distance from ground to vn is 1.9m, distance from car base to vn is 1.3m
+            arguments = ['0', '0', '1.5', '0', '0', '0', 'base_link', 'base_footprint'])
 
     # Create the launch description and populate
     ld = LaunchDescription()

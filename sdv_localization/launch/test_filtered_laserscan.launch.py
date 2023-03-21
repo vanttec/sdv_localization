@@ -23,6 +23,7 @@ def generate_launch_description():
                 'range_min': 0.0,
                 'range_max': 7.0,
                 'use_inf': True,
+                'concurrency_level': 8, #Amount of threads to create
                 'inf_epsilon': 1.0
             }],
             name='pointcloud_to_laserscan'
