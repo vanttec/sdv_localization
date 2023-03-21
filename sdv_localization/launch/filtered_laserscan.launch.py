@@ -12,10 +12,10 @@ def generate_launch_description():
             remappings=[('cloud_in', '/velodyne_points'),
                         ('scan', '/full_scan')],
             parameters=[{
-                'target_frame': 'velodyne',
+                'target_frame': 'base_link',
                 'transform_tolerance': 0.40,
-                'min_height': -0.60,
-                'max_height': 2.0,
+                'min_height': -1.5,
+                'max_height': 0.5,
                 'angle_min': -3.1415927410125732,  # -M_PI/2
                 'angle_max': 3.1415927410125732,  # M_PI/2
                 'angle_increment': 0.007000000216066837,  # M_PI/360.0

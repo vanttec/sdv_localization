@@ -36,7 +36,7 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             name="tf_base_link_to_base_footprint",
-            arguments = ['0', '0', '2.0', '0', '0', '0', 'base_link', 'base_footprint'])
+            arguments = ['0', '0', '1.9', '0', '0', '0', 'base_link', 'base_footprint'])
 
     # Create the launch description and populate
     ld = LaunchDescription()
