@@ -25,6 +25,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(vectornav_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(sdv_localization_msgs REQUIRED)
 
 # vncxx
 add_subdirectory(vnproglib-1.2.0.0/cpp)
@@ -32,13 +34,17 @@ add_subdirectory(vnproglib-1.2.0.0/cpp)
 #vn_odom_ned_msgs
 
 add_executable(vn_ned_pose src/ned_pose.cc)
+add_executable(diagnostics src/diagnostics.cc)
 ament_target_dependencies(vn_ned_pose rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
+ament_target_dependencies(diagnostics rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs)
 
 target_link_libraries(vn_ned_pose vncxx )
+target_link_libraries(diagnostics vncxx )
 
 
 install(TARGETS
   vn_ned_pose
+  diagnostics
   DESTINATION lib/${PROJECT_NAME}
 )
 
