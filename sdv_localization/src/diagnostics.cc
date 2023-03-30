@@ -112,13 +112,28 @@ private:
     int nomspub = sub_multisense_ ->get_publisher_count();
 
     msg_output.header.stamp = this->get_clock()->now();
+    
+    if (novnpub == 0){
+      hasInitializedvn = false;
+      hasPublishervn = false;
 
-    if (novnpub >= 1 && !hasInitializedvn){
+    }
+
+    else if (novnpub >= 1 && !hasInitializedvn){
       hasInitializedvn = true;
     }
 
-    if (novlpub >= 1 && !hasInitializedvl) {
+    if (novlpub == 0){
+      hasInitializedvl = false;
+      hasPublishervl = false;
+    }
+    else if (novlpub >= 1 && !hasInitializedvl) {
       hasInitializedvl = true;
+    }
+
+    if (nomspub == 0){
+      hasInitializedms = false;
+      hasPublisherms = false;
     }
 
     if (nomspub >= 1 && !hasInitializedms) {

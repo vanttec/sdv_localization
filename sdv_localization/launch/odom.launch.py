@@ -15,7 +15,7 @@ def generate_launch_description():
     # Vectornav odometry and path
     start_odom_pub = Node(
         package='sdv_localization', 
-        executable='vn_ned_pose',
+        executable='vn_gps_pose',
         output='screen',
         parameters=[os.path.join(this_dir, 'config', 'VnNedPoseNode.yaml')])
     

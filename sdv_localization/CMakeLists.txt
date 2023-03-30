@@ -33,17 +33,17 @@ add_subdirectory(vnproglib-1.2.0.0/cpp)
 
 #vn_odom_ned_msgs
 
-add_executable(vn_ned_pose src/ned_pose.cc)
+add_executable(vn_gps_pose src/gps_pose.cc)
 add_executable(diagnostics src/diagnostics.cc)
-ament_target_dependencies(vn_ned_pose rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
+ament_target_dependencies(vn_gps_pose rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
 ament_target_dependencies(diagnostics rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs)
 
-target_link_libraries(vn_ned_pose vncxx )
+target_link_libraries(vn_gps_pose vncxx )
 target_link_libraries(diagnostics vncxx )
 
 
 install(TARGETS
-  vn_ned_pose
+  vn_gps_pose
   diagnostics
   DESTINATION lib/${PROJECT_NAME}
 )
