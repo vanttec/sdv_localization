@@ -191,17 +191,17 @@ private:
         
         pub_odom_->publish(odom_msg);
 
-        //Transform map -> odom publish
-        geometry_msgs::msg::TransformStamped map2odom_tf;
+        //Transform odom to base_link publish in a ENU frame
+        geometry_msgs::msg::TransformStamped odom2baselink_tf;
 
-        map2odom_tf.header.frame_id = "odom";
-        map2odom_tf.header.set__stamp(msg_in->header.stamp);
-        map2odom_tf.child_frame_id = "base_link";
-        map2odom_tf.transform.translation.x = ned_pose_msg.pose.pose.position.x;
-        map2odom_tf.transform.translation.y = ned_pose_msg.pose.pose.position.y;
-        map2odom_tf.transform.translation.z = ned_pose_msg.pose.pose.position.z;
-        map2odom_tf.transform.set__rotation(msg_in->quaternion);
-        odom_tf_broadcaster_->sendTransform(map2odom_tf);
+        odom2baselink_tf.header.frame_id = "odom";
+        odom2baselink_tf.header.set__stamp(msg_in->header.stamp);
+        odom2baselink_tf.child_frame_id = "base_link";
+        odom2baselink_tf.transform.translation.x = enu_pose_msg.pose.pose.position.x;  //
+        odom2baselink_tf.transform.translation.y = enu_pose_msg.pose.pose.position.y;  //
+        odom2baselink_tf.transform.translation.z = enu_pose_msg.pose.pose.position.z;  //
+        odom2baselink_tf.transform.set__rotation(enu_pose_msg.pose.pose.orientation);                //
+        odom_tf_broadcaster_->sendTransform(odom2baselink_tf);
 
         
     }
