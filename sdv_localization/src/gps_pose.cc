@@ -103,12 +103,8 @@ private:
     fill_insreference_from_param("global_lla_reference", global_ref_ins_poslla_);
     fill_insreference_from_param("global_ecef_reference", global_ref_ins_posecef_);
     
-    RCLCPP_INFO(get_logger(), "Frame ID: '%s'", msg_in->header.frame_id.c_str());
-
+    //RCLCPP_INFO(get_logger(), "Frame ID: '%s'", msg_in->header.frame_id.c_str());
     // Time Reference (Startup)
-
-    //GLOBAL is NED with a constant reference
-    //LOCAL is NED with a reference defined as the first lla, ecef coordinate received
 
     //NED_POSE_Publish
     geometry_msgs::msg::PoseWithCovarianceStamped ned_pose_msg;
@@ -129,14 +125,13 @@ private:
         //We changed to TF2 standard messages for easier matrix rotation and subtraction
 
 
-        // VectorPoseInNED = RotMatEcef2Ned * (VectorPoseEcef - VectorRefEcef);
 
         ned_pose_msg.pose.pose.position.x = globalNED[0];
         ned_pose_msg.pose.pose.position.y = globalNED[1]; //To define 
         ned_pose_msg.pose.pose.position.z = 0;
 
-        enu_pose_msg.pose.pose.position.x = globalNED[1];
-        enu_pose_msg.pose.pose.position.y = globalNED[0]; //To define 
+        enu_pose_msg.pose.pose.position.x = globalNED[1]; //Change between 
+        enu_pose_msg.pose.pose.position.y = globalNED[0]; 
         enu_pose_msg.pose.pose.position.z = 0;
 
 
@@ -254,6 +249,7 @@ private:
     
         //If the system has data different than zero
         if(ins_posecef_.x!=0 && ins_posecef_.y!=0 && ins_poslla_.x!=0 & ins_poslla_.y!= 0){       
+            RCLCPP_INFO_ONCE(get_logger(), "GPS is initialized, starting publishers and tf");
 
             hasInitialized = true;
         }

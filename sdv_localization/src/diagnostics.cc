@@ -31,7 +31,7 @@
 
 using namespace std::chrono_literals;
 
-//ROS2 node class for odometry, NED pose, and velodyne transform - 
+//ROS2 node class diagnostics of SDV sensor topics
 class sdv_diagnostics : public rclcpp::Node
   {
     
@@ -40,12 +40,11 @@ public:
   sdv_diagnostics() : Node("sdv_diagnosticsNode")
   {
     auto options = rclcpp::SubscriptionOptions();
-    options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
-    options.topic_stats_options.publish_period = std::chrono::seconds(10);
-    options.topic_stats_options.publish_topic = "/vn_statistics";
+
 
     timer_ = this->create_wall_timer(250ms,  std::bind(&sdv_diagnostics::timer_callback, this));
 
+   
 
     //Publishers
     pub_diagnostics_ = this->create_publisher<sdv_localization_msgs::msg::SensorStatArray>("sdv_localization/diagnostics", 10);
@@ -62,7 +61,40 @@ public:
 
     auto sub_multisense_cb = std::bind(&sdv_diagnostics::sub_multisense, this, std::placeholders::_1);
     sub_multisense_ = this->create_subscription<sensor_msgs::msg::Image>(
-      "multisense/left/image_mono", 10, sub_multisense_cb, options);
+      "multisense/left/image_mono", 
+      rclcpp::QoS(rclcpp::KeepLast(10)).best_effort().durability_volatile(), 
+      sub_multisense_cb, 
+      options);
+
+      
+    //Callback for liveness changes 
+    std::function<void(size_t)> vn_liveliness_event_change_cb = std::bind(&sdv_diagnostics::vn_on_liveliness_changed, this, std::placeholders::_1);    
+    sub_vn_common_->set_on_new_qos_event_callback(vn_liveliness_event_change_cb, rcl_subscription_event_type_t::RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+  
+    //Callback for liveness changes 
+    std::function<void(size_t)> vl_liveliness_event_change_cb = std::bind(&sdv_diagnostics::vl_on_liveliness_changed, this, std::placeholders::_1);    
+    sub_velodyne_pcl_ ->set_on_new_qos_event_callback(vl_liveliness_event_change_cb, rcl_subscription_event_type_t::RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+
+    //Callback for liveness changes 
+    std::function<void(size_t)> ms_liveliness_event_change_cb = std::bind(&sdv_diagnostics::ms_on_liveliness_changed, this, std::placeholders::_1);    
+    sub_multisense_ ->set_on_new_qos_event_callback(ms_liveliness_event_change_cb, rcl_subscription_event_type_t::RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+
+
+      
+     
+
+      //sub_multisense_ ->set_on_new_qos_event_callb
+
+
+
+    //     // Create the subscriber with the Liveliness QoS policy.
+    // subscriber_ = this->create_subscription<std_msgs::msg::String>(
+    //   "liveliness_topic", qos_profile,
+    //   std::bind(&LivelinessSubscriber::on_message_received, this, std::placeholders::_1),
+    //   rclcpp::SubscriptionOptions()
+    //     .set_liveliness_changed_callback(std::bind(&LivelinessSubscriber::on_liveliness_changed, this, std::placeholders::_1)));
+
+    
 
 
 
@@ -114,31 +146,41 @@ private:
     msg_output.header.stamp = this->get_clock()->now();
     
     if (novnpub == 0){
+      RCLCPP_INFO_ONCE(get_logger(), "No vectornav publisher");
+
       hasInitializedvn = false;
       hasPublishervn = false;
+      isGpsAvailable = false;
+      
 
     }
 
     else if (novnpub >= 1 && !hasInitializedvn){
       hasInitializedvn = true;
+      
     }
 
     if (novlpub == 0){
       hasInitializedvl = false;
       hasPublishervl = false;
+      
     }
     else if (novlpub >= 1 && !hasInitializedvl) {
       hasInitializedvl = true;
+      
     }
 
     if (nomspub == 0){
       hasInitializedms = false;
       hasPublisherms = false;
+      
     }
 
     if (nomspub >= 1 && !hasInitializedms) {
       hasInitializedms = true;
+      
     }
+
     
     //If topic has a single publisher
 
@@ -156,10 +198,27 @@ private:
 
     //If topic has working gps
     msg_output.is_gps_ready = isGpsAvailable;
-
-
     pub_diagnostics_ -> publish(msg_output); 
   }
+
+  void vn_on_liveliness_changed(size_t test)
+  {
+    // Print "hello" when Liveliness QoS event changes.
+    isChangingvn = !isChangingvn;
+  }
+
+  void vl_on_liveliness_changed(size_t test)
+  {
+    // Print "hello" when Liveliness QoS event changes.
+    isChangingvl = !isChangingvl;
+  }
+
+  void ms_on_liveliness_changed(size_t test)
+  {
+    // Print "hello" when Liveliness QoS event changes.
+    isChangingms = !isChangingms;
+  }
+  
 
 
   
@@ -178,6 +237,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_velodyne_pcl_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_multisense_;
 
+  ///Callbacks for liveliness change
 
 
   /// Status variables - Initialized in false 
@@ -193,6 +253,7 @@ private:
 
   //Vn state variables
   bool isGpsAvailable = false;
+
 
   
 };
