@@ -35,16 +35,20 @@ add_subdirectory(vnproglib-1.2.0.0/cpp)
 
 add_executable(vn_gps_pose src/gps_pose.cc)
 add_executable(diagnostics src/diagnostics.cc)
+add_executable(vslam_repub src/visual_slam_republisher.cc)
 ament_target_dependencies(vn_gps_pose rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
 ament_target_dependencies(diagnostics rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs)
+ament_target_dependencies(vslam_repub rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs)
 
 target_link_libraries(vn_gps_pose vncxx )
 target_link_libraries(diagnostics vncxx )
+target_link_libraries(vslam_repub vncxx )
 
 
 install(TARGETS
   vn_gps_pose
   diagnostics
+  vslam_repub
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -57,6 +61,12 @@ install(DIRECTORY
   config
   DESTINATION share/${PROJECT_NAME}/
 )
+
+install(DIRECTORY
+  mesh
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 
 
 if(BUILD_TESTING)
