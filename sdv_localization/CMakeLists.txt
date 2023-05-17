@@ -63,9 +63,10 @@ install(DIRECTORY
 )
 
 install(DIRECTORY
-  mesh
+  meshes
   DESTINATION share/${PROJECT_NAME}/
 )
+
 
 
 

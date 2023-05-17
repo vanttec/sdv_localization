@@ -142,9 +142,9 @@ private:
         ned_pose_msg.pose.pose.orientation = tf2::toMsg(quaternionTransformNed);
 
         tf2::Quaternion quaternionTransformEnu, quaternionResult;
-        quaternionTransformEnu.setRPY(0, 0, -90);
+        //quaternionTransformEnu.setRPY(0, 0, -90);
         tf2::convert(msg_in->quaternion, quaternionResult);
-        quaternionResult = quaternionResult * quaternionTransformEnu;
+        //quaternionResult = quaternionResult * quaternionTransformEnu;
         quaternionResult.setZ(-quaternionResult.getZ());
         quaternionResult.normalize();
         

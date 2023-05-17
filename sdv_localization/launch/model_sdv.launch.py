@@ -12,7 +12,7 @@ def generate_launch_description():
 
     urdf_file_name = 'sdv.urdf'
     urdf = os.path.join(
-        get_package_share_directory("sdv_localization"),"mesh/",urdf_file_name)
+        get_package_share_directory("sdv_localization"), "meshes/", urdf_file_name)
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
