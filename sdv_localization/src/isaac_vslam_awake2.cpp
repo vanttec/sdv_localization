@@ -28,7 +28,7 @@ private:
   {
     // Run the launch file using system
     // Change the path to your launch file
-    std::string launch_file_path = "/workspaces/isaac_ros-dev/src/isaac_ros_visual_slam/isaac_ros_visual_slam/launch/isaac_ros_visual_slam.launch.py";
+    std::string launch_file_path = "/workspaces/isaac_ros-dev/src/sdv_localization/sdv_localization/launch/isaac_ros_visual_slam.launch.py";
     int exit_code = system(("ros2 launch " + launch_file_path).c_str());
     if (exit_code == -1) {
       RCLCPP_ERROR(get_logger(), "Error running the launch file");
