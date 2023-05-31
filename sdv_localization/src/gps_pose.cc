@@ -113,7 +113,9 @@ private:
     geometry_msgs::msg::PoseWithCovarianceStamped enu_pose_msg;
 
     
-    if(hasInitialized){
+    if(hasInitialized &&  !(msg_in->insstatus.mode == msg_in->insstatus.MODE_NO_GPS)){
+
+        RCLCPP_INFO_EXPRESSION(get_logger(), (msg_in->insstatus.mode == msg_in->insstatus.MODE_ALIGNING), "Aligning INS Compass");
         std::array<double, 3> currECEF;;
         currECEF[0] = ins_posecef_.x;
         currECEF[1] = ins_posecef_.y;
@@ -197,14 +199,13 @@ private:
         odom2baselink_tf.transform.translation.z = enu_pose_msg.pose.pose.position.z;  //
         odom2baselink_tf.transform.set__rotation(enu_pose_msg.pose.pose.orientation);                //
         odom_tf_broadcaster_->sendTransform(odom2baselink_tf);
-
         
     }
-    else{
+    else
+    {
         RCLCPP_INFO(get_logger(), "Reference can't be calculated, location data is 0");
-    }
+    } 
 
-    
   }
 
   /** Convert VN time group data to ROS2 standard message types
@@ -224,8 +225,6 @@ private:
   void sub_vn_gps(const vectornav_msgs::msg::GpsGroup::SharedPtr msg_in)
   {
     gps_fix_ = msg_in->fix;
-
-
   }
 
   /** Convert VN attitude group data to ROS2 standard message types
@@ -248,11 +247,10 @@ private:
     if(!hasInitialized){
     
         //If the system has data different than zero
-        if(ins_posecef_.x!=0 && ins_posecef_.y!=0 && ins_poslla_.x!=0 & ins_poslla_.y!= 0){       
+        if(ins_posecef_.x!=0 && ins_posecef_.y!=0 && ins_poslla_.x!=0 & ins_poslla_.y!= 0){  
             RCLCPP_INFO_ONCE(get_logger(), "GPS is initialized, starting publishers and tf");
-
             hasInitialized = true;
-        }
+      }
     }
   }
 
