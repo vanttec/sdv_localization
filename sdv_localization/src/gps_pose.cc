@@ -30,7 +30,7 @@ class vnGPSPose : public rclcpp::Node
   
 
 public:
-  vnGPSPose() : Node("vnGPSPoseNode")
+  vnGPSPose() : Node("vn_gps_pose_node")
   {
     //Parameter
     declare_parameter<std::vector<double>>("orientation_covariance", orientation_covariance_);
@@ -112,8 +112,13 @@ private:
     //ENU_POSE_Publish
     geometry_msgs::msg::PoseWithCovarianceStamped enu_pose_msg;
 
+    if (msg_in->insstatus.mode == msg_in->insstatus.MODE_NO_GPS) //Verify if GPS signal is not lost
+    {
+      hasInitialized = false;
+    }
+
     
-    if(hasInitialized &&  !(msg_in->insstatus.mode == msg_in->insstatus.MODE_NO_GPS)){
+    if(hasInitialized){
 
         RCLCPP_INFO_EXPRESSION(get_logger(), (msg_in->insstatus.mode == msg_in->insstatus.MODE_ALIGNING), "Aligning INS Compass");
         std::array<double, 3> currECEF;;
@@ -125,8 +130,6 @@ private:
         std::array<double, 3> globalNED = calculateNED(global_ref_ins_posecef_, global_ref_ins_poslla_, currECEF);
 
         //We changed to TF2 standard messages for easier matrix rotation and subtraction
-
-
 
         ned_pose_msg.pose.pose.position.x = globalNED[0];
         ned_pose_msg.pose.pose.position.y = globalNED[1]; //To define 
