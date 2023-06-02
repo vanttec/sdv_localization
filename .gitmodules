@@ -13,3 +13,9 @@
 [submodule "multisense_ros2"]
 	path = multisense_ros2
 	url = https://github.com/carnegierobotics/multisense_ros2.git
+[submodule "sdv_localization/src/yolov8_ros"]
+	path = sdv_localization/src/yolov8_ros
+	url = https://github.com/mgonzs13/yolov8_ros.git
+[submodule "yolov8_ros"]
+	path = yolov8_ros
+	url = https://github.com/mgonzs13/yolov8_ros.git
