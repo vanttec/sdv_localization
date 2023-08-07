@@ -27,6 +27,7 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(sdv_localization_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 # vncxx
 add_subdirectory(vnproglib-1.2.0.0/cpp)
@@ -36,22 +37,26 @@ add_subdirectory(vnproglib-1.2.0.0/cpp)
 add_executable(vn_gps_pose src/gps_pose.cc)
 add_executable(diagnostics src/diagnostics.cc)
 add_executable(vslam_repub src/visual_slam_republisher.cc)
-add_executable(isaac_awake src/isaac_vslam_awake2.cpp)
+#add_executable(isaac_awake src/isaac_vslam_awake2.cpp)
+add_executable(velocity_visualizer src/odom_velocity_visualizer.cpp)
 ament_target_dependencies(vn_gps_pose rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs)
 ament_target_dependencies(diagnostics rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs)
 ament_target_dependencies(vslam_repub rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs)
-ament_target_dependencies(isaac_awake rclcpp geometry_msgs)
+ament_target_dependencies(velocity_visualizer rclcpp sensor_msgs vectornav_msgs tf2_geometry_msgs nav_msgs sdv_localization_msgs visualization_msgs)
+#ament_target_dependencies(isaac_awake rclcpp geometry_msgs)
 
 target_link_libraries(vn_gps_pose vncxx )
 target_link_libraries(diagnostics vncxx )
 target_link_libraries(vslam_repub vncxx )
+target_link_libraries(velocity_visualizer vncxx)
 
 
 install(TARGETS
   vn_gps_pose
   diagnostics
   vslam_repub
-  isaac_awake
+  #isaac_awake
+  velocity_visualizer
   DESTINATION lib/${PROJECT_NAME}
 )
 
