@@ -113,10 +113,22 @@ private:
     if (!hasPublishervn)
     {
       hasPublishervn = true;
+      isChangingvn = true;
     }
 
     if (msg_in->position.x != 0) {
       isGpsAvailable = true;
+    }
+    else{
+      isGpsAvailable = false;
+    }
+
+    if (msg_in->insstatus.mode == 2 && msg_in->insstatus.gps_compass == true)
+    {
+      isGpsBestQuality = true;
+    }
+    else {
+      isGpsBestQuality = false;
     }
   }
 
@@ -125,6 +137,7 @@ private:
     if (!hasPublishervl)
     {
       hasPublishervl = true;
+      isChangingvl = true;
     }
   }
 
@@ -133,6 +146,7 @@ private:
     if (!hasPublisherms)
     {
       hasPublisherms = true;
+      isChangingms = true;
     }
   }
 
@@ -151,8 +165,7 @@ private:
       hasInitializedvn = false;
       hasPublishervn = false;
       isGpsAvailable = false;
-      
-
+      isChangingvn = false;
     }
 
     else if (novnpub >= 1 && !hasInitializedvn){
@@ -161,8 +174,10 @@ private:
     }
 
     if (novlpub == 0){
+      RCLCPP_INFO_ONCE(get_logger(), "No velodyne publisher");
       hasInitializedvl = false;
       hasPublishervl = false;
+      isChangingvl = false;
       
     }
     else if (novlpub >= 1 && !hasInitializedvl) {
@@ -171,12 +186,14 @@ private:
     }
 
     if (nomspub == 0){
+      RCLCPP_INFO_ONCE(get_logger(), "No multisense publisher");
       hasInitializedms = false;
       hasPublisherms = false;
+      isChangingms = false;
       
     }
 
-    if (nomspub >= 1 && !hasInitializedms) {
+    else if (nomspub >= 1 && !hasInitializedms) {
       hasInitializedms = true;
       
     }
@@ -194,10 +211,18 @@ private:
       msg_output.vl_status.is_publishing = hasPublishervl;
       msg_output.ms_status.is_publishing = hasPublisherms;
     
-    //If topic has missing fields //TODO
+    //If topic is changing
+
+    msg_output.vn_status.is_changing = isChangingvn;
+    msg_output.vl_status.is_changing = isChangingvl;
+    msg_output.ms_status.is_changing = isChangingms;
 
     //If topic has working gps
     msg_output.is_gps_ready = isGpsAvailable;
+
+    //If topic has gps aligned and is using gps compass
+    msg_output.is_gps_best_quality = isGpsBestQuality;
+
     pub_diagnostics_ -> publish(msg_output); 
   }
 
@@ -253,6 +278,7 @@ private:
 
   //Vn state variables
   bool isGpsAvailable = false;
+  bool isGpsBestQuality = false;
 
 
   

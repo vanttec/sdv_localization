@@ -30,7 +30,7 @@ class vnGPSPose : public rclcpp::Node
   
 
 public:
-  vnGPSPose() : Node("vnGPSPoseNode")
+  vnGPSPose() : Node("vn_gps_pose_node")
   {
     //Parameter
     declare_parameter<std::vector<double>>("orientation_covariance", orientation_covariance_);
@@ -89,8 +89,6 @@ public:
       "vectornav/raw/gps2", 10, sub_vn_gps2_cb);
   }
 
-
-
 private:
   /** Convert VN common group data to ROS2 standard message types
    *
@@ -112,8 +110,15 @@ private:
     //ENU_POSE_Publish
     geometry_msgs::msg::PoseWithCovarianceStamped enu_pose_msg;
 
+    if (msg_in->insstatus.mode == msg_in->insstatus.MODE_NO_GPS) //Verify if GPS signal is not lost
+    {
+      hasInitialized = false;
+    }
+
     
     if(hasInitialized){
+
+        RCLCPP_INFO_EXPRESSION(get_logger(), (msg_in->insstatus.mode == msg_in->insstatus.MODE_ALIGNING), "Aligning INS Compass");
         std::array<double, 3> currECEF;;
         currECEF[0] = ins_posecef_.x;
         currECEF[1] = ins_posecef_.y;
@@ -123,8 +128,6 @@ private:
         std::array<double, 3> globalNED = calculateNED(global_ref_ins_posecef_, global_ref_ins_poslla_, currECEF);
 
         //We changed to TF2 standard messages for easier matrix rotation and subtraction
-
-
 
         ned_pose_msg.pose.pose.position.x = globalNED[0];
         ned_pose_msg.pose.pose.position.y = globalNED[1]; //To define 
@@ -179,11 +182,24 @@ private:
         nav_msgs::msg::Odometry odom_msg;
 
         odom_msg.child_frame_id = "odom";
-        odom_msg.header = ned_pose_msg.header;
-        odom_msg.pose = ned_pose_msg.pose;
-        odom_msg.twist.twist.angular = msg_in->angularrate;
-        odom_msg.twist.twist.linear = msg_in->velocity;
+        odom_msg.header = enu_pose_msg.header;
+        odom_msg.pose = enu_pose_msg.pose;
+        geometry_msgs::msg::Vector3 tempVector3;
+        //Switch between Yawpitchroll in NED to ENU format = pitch <-> roll
+        tempVector3.x = msg_in->angularrate.x;
+        tempVector3.y = msg_in->angularrate.z;
+        tempVector3.z = msg_in->angularrate.y;
+
+        odom_msg.twist.twist.angular = tempVector3;
         
+        //Switch from NED to ENU velocity
+
+        // tempVector3.x = msg_in->velocity.y;
+        // tempVector3.y = msg_in->velocity.x;
+        // tempVector3.z = -msg_in->velocity.z;
+        odom_msg.twist.twist.linear = ins_velbody_;
+        
+
         pub_odom_->publish(odom_msg);
 
         //Transform odom to base_link publish in a ENU frame
@@ -195,16 +211,15 @@ private:
         odom2baselink_tf.transform.translation.x = enu_pose_msg.pose.pose.position.x;  //
         odom2baselink_tf.transform.translation.y = enu_pose_msg.pose.pose.position.y;  //
         odom2baselink_tf.transform.translation.z = enu_pose_msg.pose.pose.position.z;  //
-        odom2baselink_tf.transform.set__rotation(enu_pose_msg.pose.pose.orientation);                //
+        odom2baselink_tf.transform.set__rotation(enu_pose_msg.pose.pose.orientation);  //
         odom_tf_broadcaster_->sendTransform(odom2baselink_tf);
-
         
     }
-    else{
+    else
+    {
         RCLCPP_INFO(get_logger(), "Reference can't be calculated, location data is 0");
-    }
+    } 
 
-    
   }
 
   /** Convert VN time group data to ROS2 standard message types
@@ -224,8 +239,6 @@ private:
   void sub_vn_gps(const vectornav_msgs::msg::GpsGroup::SharedPtr msg_in)
   {
     gps_fix_ = msg_in->fix;
-
-
   }
 
   /** Convert VN attitude group data to ROS2 standard message types
@@ -244,15 +257,15 @@ private:
     ins_poslla_ = msg_in->poslla;
     ins_velned_ = msg_in->velned;
     
+    
     //If the system still hasnt initialized
     if(!hasInitialized){
     
         //If the system has data different than zero
-        if(ins_posecef_.x!=0 && ins_posecef_.y!=0 && ins_poslla_.x!=0 & ins_poslla_.y!= 0){       
+        if(ins_posecef_.x!=0 && ins_posecef_.y!=0 && ins_poslla_.x!=0 & ins_poslla_.y!= 0){  
             RCLCPP_INFO_ONCE(get_logger(), "GPS is initialized, starting publishers and tf");
-
             hasInitialized = true;
-        }
+      }
     }
   }
 

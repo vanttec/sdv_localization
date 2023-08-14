@@ -1,0 +1,28 @@
+### ekf config file ###
+ekf_filter_node:
+    ros__parameters:
+        frequency: 30.0
+
+# ekf_localization_node and ukf_localization_node both use a 3D omnidirectional motion model. If this parameter is
+# set to true, no 3D information will be used in your state estimate. Use this if you are operating in a planar
+# environment and want to ignore the effect of small variations in the ground plane that might otherwise be detected
+# by, for example, an IMU. Defaults to false if unspecified.
+        two_d_mode: false
+
+# Whether to publish the acceleration state. Defaults to false if unspecified.
+        publish_acceleration: true
+
+# Whether to broadcast the transformation over the /tf topic. Defaultsto true if unspecified.
+        publish_tf: false
+        map_frame: map              # Defaults to "map" if unspecified
+        odom_frame: odom            # Defaults to "odom" if unspecified
+        base_link_frame: base_link  # Defaults to "base_link" ifunspecified
+        world_frame: odom           # Defaults to the value ofodom_frame if unspecified
+
+        odom_vn: sdv_localization/odom
+        odom_vn_config: [true, true, false,   # x, y, z
+               false, false, true,  # roll, pitch, yaw
+               true, true, false,   # vx, vy, vz
+               false, false, false, # vroll, vpitch, vyaw
+               false, false, false] # ax, ay, az
+
