@@ -1,12 +1,18 @@
 [submodule "vectornav"]
 	path = vectornav
 	url = https://github.com/dawonn/vectornav.git
-[submodule "pointcloud_to_laserscan"]
-	path = pointcloud_to_laserscan
-	url = https://github.com/ros-perception/pointcloud_to_laserscan.git
 [submodule "slam_toolbox"]
 	path = slam_toolbox
 	url = https://github.com/SteveMacenski/slam_toolbox.git
 [submodule "velodyne"]
 	path = velodyne
 	url = https://github.com/ros-drivers/velodyne.git
+[submodule "multisense_ros2"]
+	path = multisense_ros2
+	url = https://github.com/carnegierobotics/multisense_ros2.git
+[submodule "sdv_localization/src/yolov8_ros"]
+	path = sdv_localization/src/yolov8_ros
+	url = https://github.com/mgonzs13/yolov8_ros.git
+[submodule "yolov8_ros"]
+	path = yolov8_ros
+	url = https://github.com/mgonzs13/yolov8_ros.git
