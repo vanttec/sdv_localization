@@ -42,9 +42,9 @@ To monitor and verify when the status is ready, you can run `ros2 topic echo /ve
 
 To start publishing pose and orientation, run `ros2 launch sdv_localization sdv_enu_tf.launch.py`
 
-To visualize the model of the car, run `ros2 launch sdv_localization model_sdv_.launch.py`
+To visualize the model of the car, run `ros2 launch sdv_localization model_sdv.launch.py`
 
-To visualize the current map with the SDV's position, go to `sdv_localization/sdv_localization/config` and run `map_broadcaster.launch.py`
+To visualize the current map with the SDV's position, go to `sdv_localization/sdv_localization/maps` and run `map_broadcaster.launch.py`
 
 Note: All elements must be added in RVIZ2 for visualization, additionally, the map topic's configuration may need to be changed to 'volatile' to correctly work.
 
@@ -56,4 +56,60 @@ While running the rosbag with the `/scan` and `/vectornav/raw/common` topics, ru
 
 If everything can be visualized, you can run `ros2 launch sdv_localization rosbag_mapping.launch.py`
 
-To save the map, in Rviz2 go to 'Panels' -> 'Add New Panel' -> 'slam_toolbox/SlamToolboxPlugin' and press 'Save Map' on the new window.
+To save the map, in Rviz2 go to 'Panels' -> 'Add New Panel' -> 'slam_toolbox/SlamToolboxPlugin' and press 'Save Map' on the new window. The new map's name can be specified in the blank field beside the button, and it is saved in the directory where Rviz2 is initiated
+
+## Sdv_localization nodes and topics
+
+### diagnostics 
+
+input topics
+   - vectornav/raw/common
+   - velodyne_points
+   - multisense/left/image_mono
+
+output topics
+   - sdv_localization/diagnostics
+
+description
+
+### velocity_visualizer
+
+input topics
+   - sdv_localization_odom
+   - visual_slam/tracking/odometry
+
+output topics
+   - sdv_localization/vn_velocity_visualizer
+   - sdv_localization/visual_slam_velocity_visualizer
+
+description
+
+### vn_gps_pose 
+
+input topics
+   - vectornav/raw/common
+   - vectornav/raw/time
+   - vectornav/raw/imu
+   - vectornav/raw/gps
+   - vectornav/raw/ins
+   - vectornav/raw/attitude
+   - vectornav/raw/gps2
+
+output topics:
+   - sdv_localization/odom
+   - sdv_localization/ned_pose
+   - sdv_localization/enu_pose
+   - sdv_localization/ref_ecef
+   - sdv_localization/ref_ins
+   - sdv_localization/enu_path
+   - sdv_localization/ned_path
+
+description
+
+### vslam_repub 
+
+input topics: XXX
+
+output topics: XXX
+
+description: XXX
