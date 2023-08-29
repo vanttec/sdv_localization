@@ -19,6 +19,7 @@
   <depend>nav_msgs</depend>
   <depend>sdv_localization_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>sbg_driver</depend>
 
   <!-- TODO: .msg Hex Constant Support Required -->
   <exec_depend>rosidl_default_runtime</exec_depend>
