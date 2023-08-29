@@ -63,7 +63,7 @@ def generate_launch_description():
         'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
     declare_use_ekf_cmd = DeclareLaunchArgument(
-        'use_ekf', default_value='False',
+        'use_ekf', default_value='true',
         description='Use Extended Kalman Filter to fuse sensors')
     declare_use_simulator_cmd = DeclareLaunchArgument(
         'use_simulator',
@@ -94,8 +94,13 @@ def generate_launch_description():
         description='Absolute path to rviz config file')
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(beetle_nav_dir, 'maps', 'map_blender_no_buildings.yaml'),
+        #default_value=os.path.join(beetle_nav_dir, 'maps', 'Field.yaml'),
+        #default_value=os.path.join(sdv_planning, 'maps', 'map.yaml'),
+        #default_value=os.path.join(sdv_planning, 'maps', 'andres_map.yaml'),
+        default_value=os.path.join(sdv_planning, 'maps', 'andres_map2.yaml'),
+
         description='Full path to map yaml file to load')
+    
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info',
         description='log level')
