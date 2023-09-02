@@ -11,7 +11,7 @@ def generate_launch_description():
 
     start_map_broadcaster =  Node(
             package='nav2_map_server', executable='map_server',
-            parameters=[os.path.join(this_dir, 'config', 'map_server_params.yaml')],
+            parameters=[os.path.join(this_dir, 'maps', 'map_server_params.yaml')],
             name='map_server',
             output='screen'
         )
